@@ -1,30 +1,47 @@
-# Purpose of This Repo
+# Customer Support Chatbot on Amazon Bedrock AgentCore
 
-This repo is the source of truth for the course project **"Customer Support Chatbot with Amazon Bedrock AgentCore"** (Prompting for Effective LLM Reasoning). It contains the starter files students use to build the project.
+> **Udacity project.** This is my solution to the "Customer Support Chatbot with Amazon Bedrock AgentCore" project from Udacity's AWS Agentic AI Nanodegree (Future AWS Agent Engineer). The project brief, starter code, CloudFormation templates and Lambda tool are provided by Udacity. The system prompt, test cases, evaluation runs and write-up are my own work.
 
-> **Note:** Bedrock *Agents Classic* was closed to new customers on July 30, 2026. This project runs on its successor, the **Amazon Bedrock AgentCore managed harness**, with tools exposed through an **AgentCore Gateway**. Bedrock Evaluations, which the project uses for testing, is unaffected.
+## What it does
 
-## Folder Structure
+A support chatbot for a fictional online shop. One system prompt routes every message to one of three paths, with no separate classifier:
 
-### Project Folder
+- **Bug reports:** asks for the description, steps to reproduce and environment, one question at a time. It then files a single ticket through the `create_bug_report` tool (AgentCore Gateway → Lambda → DynamoDB) and gives the customer the ticket ID.
+- **Platform questions:** answers only from the shop FAQ embedded in the prompt.
+- **Anything else:** hands the customer off to the human support phone line.
 
-The `project` folder contains all files and instructions necessary for the project:
+**Stack:** Amazon Bedrock AgentCore managed harness, Amazon Nova Pro, AgentCore Gateway, AWS Lambda, DynamoDB, Bedrock Evaluations (LLM-as-a-judge).
 
-* `project/README.md` — the full project instructions (setup, building the harness, testing, cleanup).
-* `project/starter/` — the files students start from:
-  * CloudFormation templates for the bug-report tool (Lambda + DynamoDB + IAM roles) and the testing resources (S3 + evaluation role)
-  * Python setup scripts for the AgentCore resources (`setup_gateway.py`, `create_harness.py`), a chat client (`chat.py`), and cleanup (`cleanup_agentcore.py`)
-  * `system_prompt.txt` — the student's main deliverable
-  * the FAQ document, the evaluation-dataset generator, and a test-suite template
+## Prompt iterations and results
 
-The reference solution, rubric, and detailed docs (`docs/tools-setup.md`, `docs/testing.md`) live in the companion solution repo.
+| Run | Correctness | What changed |
+|---|---|---|
+| 1 | 0.67 | The bot called the tool on the first message, so the bug-report case scored 0. |
+| 2 | 0.83 | Added a rule requiring a clarifying question before any tool call. The bug-report case scored 0.5. |
+| 4 | [your score] | Required all three fields to be confirmed before the tool is called, and reworded the test expectation to match what a single turn can show. |
 
-### What students build
+Multi-turn behavior (collecting all three fields, then filing exactly one ticket) was verified manually with `chat.py`, and the tickets appear in DynamoDB.
 
-1. Deploy the tool stack (CloudFormation) and create the gateway (`setup_gateway.py`).
-2. Design the system prompt: route each message to bug-report collection, FAQ answering, or a polite human hand-off; collect all bug details across a multi-turn session before filing a ticket with the `create_bug_report` tool.
-3. Create the harness (`create_harness.py`), iterate with `chat.py`.
-4. Test automatically: run a test suite through `generate-eval-dataset.py` and score the results with Bedrock Evaluations.
-5. Clean up all resources.
+## Repo layout
 
-All work happens in **us-east-1**, with the model pinned to `us.amazon.nova-pro-v1:0`.
+- `project/starter/system_prompt.txt`: the chatbot prompt (my main deliverable)
+- `project/starter/harness-tests.json`: test cases covering all three routes
+- `project/starter/output_eval_dataset.jsonl`: harness responses used for evaluation
+- `project/starter/submission/`: chat transcripts and evaluation screenshots
+
+## How to run
+
+```bash
+cd project/starter
+pip install -r requirements.txt
+aws cloudformation deploy --template-file cloudformation-tool.yaml --stack-name bug-report-tool-stack --capabilities CAPABILITY_NAMED_IAM --region us-east-1
+python setup_gateway.py
+python create_harness.py
+python chat.py
+```
+
+Delete everything when finished: `python cleanup_agentcore.py`, then delete the CloudFormation stacks.
+
+## Credits and license
+
+Starter code and project brief © Udacity, used under the license in `LICENSE.md`.
