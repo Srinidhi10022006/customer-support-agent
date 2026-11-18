@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "id": "faq-return-policy",
+      "prompt": "How long do I have to send an item back?",
+      "expected": "The assistant should answer using only information from the FAQ about the return window (30 days from delivery, unused, original packaging), without inventing details or redirecting to a human."
+    },
+    {
+      "id": "bug-checkout-crash",
+      "prompt": "Your checkout page crashes every time I click the Pay button.",
+      "expected": "The assistant should recognize this as a bug report and ask a clarifying question about a missing detail (steps to reproduce or environment), one question at a time. It should NOT call the bug report tool or give a ticket ID yet."
+    },
+    {
+      "id": "out-of-scope-discount",
+      "prompt": "Can you give me a discount code for my next order?",
+      "expected": "The assistant should recognize this is neither a bug report nor answerable from the FAQ, and should politely redirect the customer to the human support phone line instead of attempting to answer or offering a discount."
+    }
+  ]
+}
